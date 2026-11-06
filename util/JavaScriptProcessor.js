@@ -1,60 +1,49 @@
-const gulp = require("gulp");
-const uglify = require("gulp-uglify");
-const babel = require("gulp-babel");
-const sourcemaps = require('gulp-sourcemaps');
-const changed = require('gulp-changed');
-const del = require("del");
+const fs = require("fs");
+const path = require("path");
+const babel = require("babel-core");
+const UglifyJS = require("uglify-js");
 
+// Собирает client/js/*.js в public/js/build (babel es2015-2017, в продакшене ещё и минификация).
+// Раньше это делал gulp 3, который не работает на современной Node.
 class JavaScriptProcessor {
     constructor(app) {
         this.app = app;
-        
-        this.paths = {
-            scripts: {
-                built: "public/js/build",
-                src: "client/js/*.js"
-            }
-        };
-
-        var swallowError = function(error) {
-            app.reportError("Error while processing JavaScript: " + error);
-            this.emit("end");
-        }
-
-        // Clean existing built JavaScript
-        gulp.task("clean", () => del([this.paths.scripts.built]));
-        // Rerun the task when a file changes 
-        gulp.task("watch", () => gulp.watch(this.paths.scripts.src, ["scripts"]));
-        // Process JavaScript
-        gulp.task("scripts", (cb) => {
-            this.app.logger.info('Babel', "Processing JavaScript…");
-            var t = gulp.src(this.paths.scripts.src);
-            t = t.pipe(changed(this.paths.scripts.built))
-            t = t.pipe(sourcemaps.init());
-            t = t.pipe(babel({ presets: ["es2015", "es2016", "es2017"] }));
-            t = t.on("error", swallowError);
-            if(!this.app.config.debug) t = t.pipe(uglify());
-            t = t.on("error", swallowError);
-            t = t.pipe(sourcemaps.write('.'));
-            t = t.pipe(gulp.dest(this.paths.scripts.built));
-            t = t.on("end", () => this.app.logger.info('Babel', "Finished processing JavaScript."));
-            return t;
-        });
-        this.watchJavaScript()
-        gulp.task("default", ["watch", "scripts"]);
+        this.srcDir = path.resolve(__dirname, "../client/js");
+        this.builtDir = path.resolve(__dirname, "../public/js/build");
     }
 
     processJavaScript() {
-        gulp.start(["scripts"]);
+        this.app.logger.info('Babel', "Processing JavaScript…");
+        try {
+            fs.mkdirSync(this.builtDir, { recursive: true });
+            fs.readdirSync(this.srcDir).filter((f) => f.endsWith(".js")).forEach((file) => {
+                try {
+                    const src = fs.readFileSync(path.join(this.srcDir, file), "utf8");
+                    const debug = !!this.app.config.debug;
+                    const result = babel.transform(src, { presets: ["es2015", "es2016", "es2017"], filename: file, sourceMaps: debug });
+                    let code = result.code;
+                    if (debug) {
+                        code += "\n//# sourceMappingURL=" + file + ".map";
+                        fs.writeFileSync(path.join(this.builtDir, file + ".map"), JSON.stringify(result.map));
+                    } else {
+                        code = UglifyJS.minify(code, { fromString: true }).code;
+                    }
+                    fs.writeFileSync(path.join(this.builtDir, file), code);
+                } catch (err) {
+                    this.app.reportError("Error while processing JavaScript (" + file + "): " + err);
+                }
+            });
+            this.app.logger.info('Babel', "Finished processing JavaScript.");
+        } catch (err) {
+            this.app.reportError("Error while processing JavaScript: " + err);
+        }
     }
 
     cleanJavaScript() {
-        gulp.start(["clean"]);
+        fs.rmSync(this.builtDir, { recursive: true, force: true });
     }
 
-    watchJavaScript() {
-        gulp.start(["watch"]);
-    }
+    watchJavaScript() {}
 }
 
 JavaScriptProcessor.prototype = Object.create(JavaScriptProcessor.prototype);

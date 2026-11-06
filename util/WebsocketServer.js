@@ -1,4 +1,4 @@
-const ws = require("uws");
+const ws = require("ws");
 const Pixel = require("../models/pixel");
 const {SocketController} = require("./Sockets/SocketController");
 

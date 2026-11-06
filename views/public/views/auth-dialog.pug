@@ -8,7 +8,14 @@
                     span.site #{config.siteName}
                     h1 Become a member
                     p.subhead Join the #{config.siteName} community today to start placing.
-                if !config.maintenance || config.maintenance.allowSignups
+                if (config.ldap && config.ldap.enabled) || (config.openid && config.openid.enabled)
+                    br
+                    div.alert.alert-info
+                        h4 No sign up needed
+                        p Your account is created automatically on first sign in.
+                        if config.openid && config.openid.enabled
+                            p: a.btn.btn-lg.btn-success(href="/auth/openid") #{config.openid.buttonLabel || "Sign in with OpenID"}
+                else if !config.maintenance || config.maintenance.allowSignups
                     if config.oauth.dynastic && config.oauth.dynastic.enabled
                         h3 The best way to sign up
                         p.text-muted Use a Dynastic Account to sign into canvas.place
@@ -55,7 +62,10 @@
                 .heading
                     span.site #{config.siteName}
                     h1 Welcome back
-                    p.subhead Sign in to your account to continue placing and save your stats.
+                    if config.ldap && config.ldap.enabled
+                        p.subhead Sign in with your university login and password.
+                    else
+                        p.subhead Sign in to your account to continue placing and save your stats.
                 if config.maintenance.allowLogins || !config.maintenance
                     form.form-signin(action="/signin")
                         label.sr-only(for="inputUsername") Username

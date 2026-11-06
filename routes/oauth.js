@@ -1,6 +1,7 @@
 const express = require("express");
 const passport = require("passport");
 const OAuthController = require("../controllers/OAuthController");
+const OpenIDController = require("../controllers/OpenIDController");
 
 function OAuthRouter(app) {
     require("../util/passport")(passport, app);
@@ -46,6 +47,11 @@ function OAuthRouter(app) {
             router.get('/dynastic', passport.authenticate("dynastic", { state: "auth" }));
             router.get("/dynastic/callback", passport.authenticate("dynastic", { successRedirect: "/?signedin=1", failureRedirect: "/signup" }));
         }
+    }
+
+    if (app.config.openid && app.config.openid.enabled) {
+        router.get("/openid", OpenIDController.getLogin);
+        router.get("/openid/callback", OpenIDController.getCallback);
     }
 
     return router;

@@ -1,19 +1,23 @@
-version: "3"
 services:
   api:
     restart: always
     build: .
     ports:
-      - "127.0.0.1:3000:3000"
+      - "${BIND_ADDR:-127.0.0.1}:${PORT:-3000}:${PORT:-3000}"
     depends_on:
       - "db"
+    env_file:
+      - .env
     environment:
       NODE_ENV: "production"
       DATABASE: "mongodb://db/place"
-      PORT: 3000
+      PORT: "${PORT:-3000}"
       ONLY_LISTEN_LOCAL: "false"
+    volumes:
+      - place-data:/usr/src/app/.place-data
   db:
-    image: mongo
+    # mongoose 4 несовместим с современными версиями MongoDB
+    image: mongo:4.4
     restart: always
     volumes:
       - mongo-volume:/data/db
@@ -21,3 +25,4 @@ services:
       - "27017"
 volumes:
   mongo-volume:
+  place-data:

@@ -1,17 +1,18 @@
-FROM node:carbon
+FROM node:22
 LABEL maintainer="applebetas@dynastic.co"
 
-# Create app directory
+# Зависимости из git (dynastic-provider, mongoose-datatables) тянутся по https
+RUN git config --global url."https://github.com/".insteadOf ssh://git@github.com/
+
 WORKDIR /usr/src/app
 
-# Copy over package.json (and package-lock.json, if applicable)
-COPY package*.json yarn.lock ./
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
-# Install app dependencies
-RUN yarn install
-
-# Bundle app source
 COPY . .
 
+# Если config/config.js не передан, берём пример: все настройки читаются из env (см. .env.example)
+RUN [ -f config/config.js ] || cp config/config.example.js config/config.js
+
 EXPOSE 3000
-CMD [ "yarn", "start" ]
+CMD [ "node", "app.js" ]

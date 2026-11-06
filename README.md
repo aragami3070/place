@@ -77,7 +77,7 @@ server {
 }
 ```
 
-## Contributing 
+## Contributing
 
 Please make a [pull request](/https://github.com/dynastic/place/pulls). Before making a pull request, come and chat with us on [Discord](https://discord.gg/CgC8FTg) in #contributors.
 

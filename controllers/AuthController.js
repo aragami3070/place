@@ -33,6 +33,12 @@ exports.postSignIn = (req, res, next) => {
 
 exports.postSignUp = (req, res, next) => {
     const config = req.place.config;
+    if ((config.ldap && config.ldap.enabled) || (config.openid && config.openid.enabled)) return res.status(403).json({
+        success: false,
+        error: {
+            message: 'Registration is done through the university sign in. Just sign in; your account is created automatically.'
+        }
+    });
     if (config.maintenance && !config.maintenance.allowSignups) return res.status(403).json({
         success: false,
         error: {

@@ -14,6 +14,8 @@ const JwtStrategy = require("passport-jwt").Strategy,
 const User = require("../models/user");
 const config = require("../config/config");
 const ActionLogger = require("../util/ActionLogger");
+const LDAPAuth = require("./LDAPAuth");
+const ExternalAccounts = require("./ExternalAccounts");
 
 module.exports = function(passport, app) {
     var opts = {};
@@ -30,12 +32,41 @@ module.exports = function(passport, app) {
         });
     }));
 
+    const ldapEnabled = !!(config.ldap && config.ldap.enabled);
+
+    // Вход через LDAP: аккаунт в БД создаётся при первом успешном входе.
+    // Имя пользователя в Place = логин в LDAP, так что в логах действий виден реальный логин студента.
+    function ldapLogin(username, password, done) {
+        LDAPAuth.authenticate(config.ldap, username, password).then((identity) => {
+            ExternalAccounts.findOrCreate(app, { oauthID: "ldap_" + identity.login, username: identity.login, displayName: identity.displayName }, function(err, user, regError) {
+                if (err) return done(err, false);
+                if (!user) return done(null, false, regError);
+                if (user.loginError()) return done(null, false, { error: user.loginError() });
+                ExternalAccounts.syncRoles(user, identity.groups, { adminGroup: config.ldap.adminGroupDN, moderatorGroup: config.ldap.moderatorGroupDN }, function(err) {
+                    if (err) return done(err, false);
+                    ActionLogger.log(app, "signIn", user, null, {method: "ldap"});
+                    done(null, user);
+                });
+            });
+        }).catch((err) => {
+            if (err.code === "invalid_credentials") return done(null, false, { error: { message: err.message, code: "invalid_credentials" } });
+            if (err.code === "forbidden") return done(null, false, { error: { message: err.message, code: "forbidden" } });
+            app.reportError("LDAP error: " + err.message);
+            done(null, false, { error: { message: "The authentication server is unavailable. Please try again later.", code: "ldap_error" } });
+        });
+    }
+
     passport.use(new LocalStrategy(function(username, password, done) {
         function rejectCredentials() {
             done(null, false, { error: { message: "Incorrect username or password provided.", code: "invalid_credentials" } });
         }
+        // Валидируем логин до поиска в БД (findByUsername строит из него регулярное выражение)
+        if (ldapEnabled && !LDAPAuth.isValidLogin(username)) return rejectCredentials();
         User.findByUsername(username, function(err, user) {
             if (err) return done(err, false);
+            // Локальные (не LDAP) аккаунты, созданные админом заранее, входят по локальному паролю.
+            // Всё остальное при включённом LDAP проверяется только через LDAP.
+            if (ldapEnabled && (!user || user.isOauth === true)) return ldapLogin(username, password, done);
             if (user) {
                 // Don't allow Oauth logins from normal login area.
                 if(user.isOauth === true) return rejectCredentials();

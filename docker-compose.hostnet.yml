@@ -1,0 +1,30 @@
+# Запасной вариант на случай, если в обычном docker-compose.yml api не находит db по имени (EAI_AGAIN db).
+# Оба сервиса работают в сети хоста, DNS не нужен: api ходит в Mongo по 127.0.0.1.
+# Запуск: docker compose -f docker-compose.hostnet.yml up --build
+services:
+  api:
+    restart: always
+    build: .
+    network_mode: host
+    depends_on:
+      - "db"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: "production"
+      DATABASE: "mongodb://127.0.0.1/place"
+      PORT: "${PORT:-3000}"
+      ONLY_LISTEN_LOCAL: "false"
+    volumes:
+      - place-data:/usr/src/app/.place-data
+  db:
+    image: mongo:4.4
+    restart: always
+    network_mode: host
+    # Mongo без пароля: слушаем только localhost, иначе база будет открыта всей сети
+    command: ["--bind_ip", "127.0.0.1"]
+    volumes:
+      - mongo-volume:/data/db
+volumes:
+  mongo-volume:
+  place-data:

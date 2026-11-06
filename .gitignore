@@ -1,80 +1,69 @@
-*.log
-# node/js
-node_modules/
-config/config.js
-place.paw
-public/js/build
-public/css/build
-util/legit.js
-util/legit.*.js
-views/legit.*
-config/community_guidelines.md
-config/privacy_policy.md
-config/tos.md
-.place-data
-modules/*
 
-### Linux ###
 *~
-
-# temporary files which can be created if a process still has a handle open of a deleted file
-.fuse_hidden*
-
-# KDE directory preferences
-.directory
-
-# Linux trash folder which might appear on any partition or disk
-.Trash-*
-
-# .nfs files are created when an open file is removed but is still being accessed
-.nfs*
-
-### OSX ###
-*.DS_Store
-.AppleDouble
-.LSOverride
-
-# Icon must end with two \r
-Icon
-
-
-# Thumbnails
 ._*
-
-# Files that might appear in the root of a volume
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
-
-# Directories potentially created on remote AFP share
+$RECYCLE.BIN/
+.apdisk
 .AppleDB
 .AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
-
-### Windows ###
-# Windows thumbnail cache files
-Thumbs.db
+.AppleDouble
+*.cab
+.com.apple.timemachine.donotpresent
+config/community_guidelines.md
+config/config.js
+config/privacy_policy.md
+config/tos.md
+Desktop.ini
+# Directories potentially created on remote AFP share
+.directory
+.DocumentRevisions-V100
+*.DS_Store
 ehthumbs.db
 ehthumbs_vista.db
-
+.env
+# Files that might appear in the root of a volume
 # Folder config file
-Desktop.ini
-
-# Recycle Bin used on file shares
-$RECYCLE.BIN/
-
-# Windows Installer files
-*.cab
+.fseventsd
+.fuse_hidden*
+Icon
+# Icon must end with two \r
+# KDE directory preferences
+### Linux ###
+# Linux trash folder which might appear on any partition or disk
+*.lnk
+*.log
+.LSOverride
+modules/*
 *.msi
 *.msm
 *.msp
-
-# Windows shortcuts
-*.lnk
+Network Trash Folder
+.nfs*
+# .nfs files are created when an open file is removed but is still being accessed
+# node/js
+node_modules/
+### OSX ###
+.place-data
+.place-data/
+place.paw
+public/css/build
+public/js/build
+# Recycle Bin used on file shares
+rollback-undo-*.json
+.Spotlight-V100
+# temporary files which can be created if a process still has a handle open of a deleted file
+.TemporaryItems
+Temporary Items
+# Thumbnails
+Thumbs.db
+.Trash-*
+.Trashes
+util/legit.*.js
+util/legit.js
+views/legit.*
 views/public/legit.js
+.VolumeIcon.icns
+### Windows ###
+# Windows Installer files
+# Windows shortcuts
+# Windows thumbnail cache files
+.env.test

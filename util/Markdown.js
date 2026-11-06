@@ -14,4 +14,5 @@ marked.setOptions({
     renderer: renderer
 });
 
-module.exports = marked;
+// В marked >= 4 CommonJS-экспорт - объект, а сама функция лежит в marked.marked
+module.exports = typeof marked === "function" ? marked : marked.marked;
